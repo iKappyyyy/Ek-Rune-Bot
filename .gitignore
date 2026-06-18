@@ -1,3 +1,4 @@
 .env
 clear-commands.js
 clearDB.js
+node_modules

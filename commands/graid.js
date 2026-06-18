@@ -4,6 +4,7 @@ const joinLeaveButtonCreator = require("../utils/joinLeaveButtonCreator");
 const createLobby = require("../utils/createLobby");
 const getLobbyUserIsIn = require("../utils/getLobbyUserIsIn");
 const removeUserFromLobby = require("../utils/removeUserFromLobby");
+const getLobbyMessage = require("../utils/getLobbyMessage");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,10 +20,12 @@ module.exports = {
                         .setDescription("The lobby's raid type")
                         .setRequired(true)
                         .addChoices(
+                            { name: "Any", value: "Any" },
                             { name: "NOTG", value: "NOTG" },
                             { name: "NOL", value: "NOL" },
                             { name: "TCC", value: "TCC" },
-                            { name: "TNA", value: "TNA" }
+                            { name: "TNA", value: "TNA" },
+                            { name: "WTP", value: "WTP" }
                         )
                 )
         )
@@ -30,6 +33,11 @@ module.exports = {
             subcommand
                 .setName("leave")
                 .setDescription('Leave your current guild raid lobby.')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("show")
+                .setDescription('Resend your lobby\'s message!')    
         ),
     run: async ({ interaction }) => {
         const subcommand = interaction.options.getSubcommand();
@@ -62,6 +70,37 @@ module.exports = {
             } else {
                 await interaction.editReply({
                     content: 'You are not in any existing lobby!'
+                });
+            }
+        } else if (subcommand === 'show') {
+            const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
+            await interaction.deferReply();
+
+            if (lobbyUserIsIn) {
+                const lobbyMessage = await getLobbyMessage(lobbyUserIsIn, interaction.client);
+                try {
+                    lobbyMessage.delete();
+                } catch (error) {
+                    console.log(`An error occurred while trying to delete a message. error: ${error}`);
+                }
+
+
+
+                await interaction.editReply({
+                    embeds: [graidCreateEmbed(lobbyUserIsIn)],
+                    components: [joinLeaveButtonCreator(lobbyUserIsIn.lobbyId)]
+                });
+
+
+                const message = await interaction.fetchReply();
+                lobbyUserIsIn.channelId = message.channel.id;
+                lobbyUserIsIn.messageId = message.id;
+                await lobbyUserIsIn.save();
+
+            } else {
+                await interaction.editReply({
+                    content: 'You are not in any existing lobby!',
+                    flags: MessageFlags.Ephemeral
                 });
             }
         }

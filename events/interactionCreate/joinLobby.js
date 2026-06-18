@@ -5,6 +5,7 @@ const { graidCreateEmbed } = require('../../utils/embedCreator');
 const getLobbyUserIsIn = require('../../utils/getLobbyUserIsIn');
 const removeUserFromLobby = require('../../utils/removeUserFromLobby');
 const checkForFullLobby = require('../../utils/checkForFullLobby');
+const getLobbyMessage = require('../../utils/getLobbyMessage');
 
 module.exports = async (interaction, client) => {
     if (!interaction.isButton()) return;
@@ -55,8 +56,7 @@ module.exports = async (interaction, client) => {
         if (lobby && lobby.members.length !== 0) {
             await lobby.save();
 
-            const channel = await client.channels.fetch(lobby.channelId);
-            const reply = await channel.messages.fetch(lobby.messageId);
+            const reply = await getLobbyMessage(lobby, client);
             await reply.edit({
                 embeds: [graidCreateEmbed(lobby)]
             });
