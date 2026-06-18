@@ -1,7 +1,9 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const { graidCreateEmbed } = require('../utils/embedCreator');
 const joinLeaveButtonCreator = require("../utils/joinLeaveButtonCreator");
 const createLobby = require("../utils/createLobby");
+const getLobbyUserIsIn = require("../utils/getLobbyUserIsIn");
+const removeUserFromLobby = require("../utils/removeUserFromLobby");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -23,6 +25,11 @@ module.exports = {
                             { name: "TNA", value: "TNA" }
                         )
                 )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("leave")
+                .setDescription('Leave your current guild raid lobby.')
         ),
     run: async ({ interaction }) => {
         const subcommand = interaction.options.getSubcommand();
@@ -42,6 +49,21 @@ module.exports = {
             lobby.channelId = message.channel.id;
             lobby.messageId = message.id;
             await lobby.save();
+        } else if (subcommand === 'leave') {
+            const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+            if (lobbyUserIsIn) {
+                await removeUserFromLobby(lobbyUserIsIn, interaction.user, interaction.client);
+
+                await interaction.editReply({
+                    content: `Successfully left ${lobbyUserIsIn.hostGuild}'s ${lobbyUserIsIn.raidType} lobby.`
+                });
+            } else {
+                await interaction.editReply({
+                    content: 'You are not in any existing lobby!'
+                });
+            }
         }
     }
     

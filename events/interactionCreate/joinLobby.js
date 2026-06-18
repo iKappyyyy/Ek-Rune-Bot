@@ -17,7 +17,7 @@ module.exports = async (interaction, client) => {
 
         if (!lobby) {  // lobby wasn't found
             await interaction.editReply({
-                content: 'Sorry, the lobby couldn\'t be found.'
+                content: 'Sorry, the lobby couldn\'t be found. Please create a new lobby.'
             });
 
             return;
@@ -34,7 +34,7 @@ module.exports = async (interaction, client) => {
 
             await removeUserFromLobby(lobby, interaction.user, client);
         } else { // user isn't in the lobby
-            const lobbyUserIsIn = await getLobbyUserIsIn(String(interaction.user));
+            const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
 
             if (lobbyUserIsIn) {
                 await removeUserFromLobby(lobbyUserIsIn, interaction.user, client);

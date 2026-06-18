@@ -8,5 +8,5 @@ module.exports = async (lobby, interaction) => {
         membersString += `${i + 1}) ${lobby.members[i]}\n`;
     }
 
-    await interaction.channel.send(`${lobby.hostGuild}'s ${lobby.raidType} raid is ready!\n\n${membersString}`);
+    await interaction.channel.send(`${lobby.hostGuild}'s ${lobby.raidType} lobby is ready!\n\n${membersString}`);
 }
