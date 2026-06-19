@@ -1,10 +1,13 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const { graidCreateEmbed } = require('../utils/embedCreator');
-const joinLeaveButtonCreator = require("../utils/joinLeaveButtonCreator");
+const getButtonRow = require("../utils/getButtonRow");
 const createLobby = require("../utils/createLobby");
 const getLobbyUserIsIn = require("../utils/getLobbyUserIsIn");
 const removeUserFromLobby = require("../utils/removeUserFromLobby");
 const getLobbyMessage = require("../utils/getLobbyMessage");
+const { MinGuildTagLength, MaxGuildTagLength } = require("../enums");
+const userIsLobbyLeader = require("../utils/userIsLobbyLeader");
+const checkForFullLobby = require("../utils/checkForFullLobby");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -32,24 +35,24 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("leave")
-                .setDescription('Leave your current guild raid lobby.')
+                .setDescription('Leave your current guild raid lobby. haha leave lollll')
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("show")
                 .setDescription('Resend your lobby\'s message!')    
         ),
+
     run: async ({ interaction }) => {
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'create') {   // create a graid lobby
             const raidType = interaction.options.get('raid-type').value;
-            const lobby = await createLobby(raidType, "SMOL", interaction.user, interaction.client);
-            const buttonRow = joinLeaveButtonCreator(lobby.lobbyId);
+            const lobby = await createLobby(raidType, interaction.user, interaction.client);
 
             await interaction.reply({
                 embeds: [graidCreateEmbed(lobby)],
-                components: [buttonRow],
+                components: [getButtonRow(lobby.lobbyId)],
             });
 
             const message = await interaction.fetchReply();
@@ -62,11 +65,11 @@ module.exports = {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             if (lobbyUserIsIn) {
-                await removeUserFromLobby(lobbyUserIsIn, interaction.user, interaction.client);
-
                 await interaction.editReply({
-                    content: `Successfully left ${lobbyUserIsIn.hostGuild}'s ${lobbyUserIsIn.raidType} lobby.`
+                    content: `Successfully left ${lobbyUserIsIn.members[0].user}'s ${lobbyUserIsIn.raidType} lobby.`
                 });
+                
+                await removeUserFromLobby(lobbyUserIsIn, interaction.user, interaction.client);
             } else {
                 await interaction.editReply({
                     content: 'You are not in any existing lobby!'
@@ -88,7 +91,7 @@ module.exports = {
 
                 await interaction.editReply({
                     embeds: [graidCreateEmbed(lobbyUserIsIn)],
-                    components: [joinLeaveButtonCreator(lobbyUserIsIn.lobbyId)]
+                    components: [getButtonRow(lobbyUserIsIn.lobbyId)]
                 });
 
 
@@ -104,6 +107,8 @@ module.exports = {
                 });
             }
         }
-    }
+    },
+
+    deleted: true
     
 }

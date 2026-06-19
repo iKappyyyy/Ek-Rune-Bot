@@ -8,13 +8,15 @@ module.exports = {
 
         const vacancyNumberString = `${lobby.members.length}/${MaxLobbyMembers}`;
 
-        let membersString = `${vacancyNumberString}\n\n`;
+        let membersString = `\n`;
         for (let i = 0; i < MaxLobbyMembers; i++) {
             if (i < lobby.members.length) {
-                membersString += `${lobby.members[i]}\n`;
+                membersString += `${i + 1}) ${lobby.members[i].user} ${lobby.members[i].guild !== "" ? `[${lobby.members[i].guild}]` : ''}${!i ? " :crown:" : ""}`;
             } else {
-                membersString += 'Vacant\n';
+                membersString += `${i + 1}) Vacant`;
             }
+
+            membersString += '\n';
         }
 
         const embed = new EmbedBuilder()
@@ -26,12 +28,12 @@ module.exports = {
                 value: lobby.raidType,
                 inline: true
             }, {
-                name: 'Hosted by',
-                value: lobby.hostGuild,
+                name: 'Members',
+                value: `${lobby.members.length}/${MaxLobbyMembers}`,
                 inline: true
             }, {
-                name: 'Members',
-                value: `${membersString}`
+                name: '',
+                value: membersString
             });
 
         return embed;

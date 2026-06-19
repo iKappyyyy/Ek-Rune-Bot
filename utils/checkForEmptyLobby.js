@@ -1,7 +1,14 @@
 const Lobby = require("../models/Lobby");
 
 module.exports = async (lobby, reply) => {
-    if (!lobby.members || lobby.members.length > 0) return false;
+    
+    if (!lobby.members) {
+        return false;
+    } else {
+        for (let i = 0; i < lobby.members.length; i++) {
+            if (lobby.members[i].user !== 'Reserved') return false;
+        }
+    }
 
     try {
         await reply.delete();

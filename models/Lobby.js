@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { LobbyTTLSeconds } = require('../enums');
+const { LobbyTTLMs } = require('../enums');
 const getRandomColor = require('../utils/getRandomColor');
 
 const lobbySchema = new mongoose.Schema({
@@ -17,13 +17,17 @@ const lobbySchema = new mongoose.Schema({
         default: "0"
     },
     raidType: String,
-    hostGuild: String,
-    members: [String],
+    members: [
+        {
+            user: String,
+            guild: String
+        }
+    ],
 
-    createdAt: {
+    expiresAt: {
         type: Date,
-        default: Date.now,
-        expires: LobbyTTLSeconds
+        default: new Date(Date.now() + LobbyTTLMs),
+        index: { expires: 0 }
     }
 });
 

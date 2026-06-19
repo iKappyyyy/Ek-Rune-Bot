@@ -2,8 +2,9 @@ const { generateId } = require('./createCustomId');
 const Lobby = require('../models/Lobby');
 const getLobbyUserIsIn = require('./getLobbyUserIsIn');
 const removeUserFromLobby = require('./removeUserFromLobby');
+const getUserGuild = require('./getUserGuild');
 
-module.exports = async (raidType, hostGuild, lobbyAuthor, client) => {
+module.exports = async (raidType, lobbyAuthor, client) => {
     let lobbyId = generateId();
 
     while (await Lobby.exists({ lobbyId })) {
@@ -15,11 +16,12 @@ module.exports = async (raidType, hostGuild, lobbyAuthor, client) => {
         await removeUserFromLobby(lobbyUserIsIn, lobbyAuthor, client);
     }
 
+    const userGuild = await getUserGuild(lobbyAuthor);
+
     const lobby = new Lobby({
         raidType,
-        hostGuild,
         lobbyId,
-        members: [lobbyAuthor]
+        members: [{ user: lobbyAuthor, guild: userGuild }]
     });
 
     await lobby.save();

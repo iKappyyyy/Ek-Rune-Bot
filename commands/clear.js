@@ -9,5 +9,7 @@ module.exports = {
         await interaction.reply({
             content: `Clearing chat...\n${"\n".repeat(50)}Chat Cleared!`
         });
-    }
+    },
+
+    deleted: true
 }

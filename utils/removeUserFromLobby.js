@@ -4,7 +4,7 @@ const { graidCreateEmbed } = require("./embedCreator");
 const getLobbyMessage = require("./getLobbyMessage");
 
 module.exports = async (lobby, user, client) => {
-    const newMembersList = lobby.members.filter(member => member !== String(user));
+    const newMembersList = lobby.members.filter(member => member.user !== String(user));
     lobby.members = newMembersList;
 
     await lobby.save();
