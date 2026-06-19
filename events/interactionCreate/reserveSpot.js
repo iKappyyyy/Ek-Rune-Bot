@@ -7,39 +7,37 @@ const userIsLobbyLeader = require('../../utils/userIsLobbyLeader');
 const { MessageFlags } = require('discord.js');
 
 module.exports = async (interaction, client) => {
-  if (!interaction.isButton()) return;
+  if (!interaction.isButton() || !interaction.customId.startsWith('reserve-button-')) return;
 
-  if (interaction.customId.startsWith('reserve-button-')) {
-    const lobbyId = interaction.customId.replace('reserve-button-', '');
-    const lobby = await Lobby.findOne({ lobbyId });
+  const lobbyId = interaction.customId.replace('reserve-button-', '');
+  const lobby = await Lobby.findOne({ lobbyId });
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    if (!userIsLobbyLeader(interaction.user, lobby)) {
-      await interaction.editReply({
-        content: 'Only the leader can reserve spots!'
-      });
-
-      return;
-    }
-
-    lobby.members.push({
-        user: "Reserved",
-        guild: ""
-    });
-
-    await lobby.save();
-
-    const lobbyMessage = await getLobbyMessage(lobby, interaction.client);
-    await lobbyMessage.edit({
-        embeds: [graidCreateEmbed(lobby)],
-        components: [getButtonRow(lobby.lobbyId)]
-    });
-
+  if (!userIsLobbyLeader(interaction.user, lobby)) {
     await interaction.editReply({
-        content: 'Reserved a spot successfully!'
+      content: 'Only the leader can reserve spots!'
     });
 
-    await checkForFullLobby(lobby, interaction);
+    return;
   }
+
+  lobby.members.push({
+      user: "Reserved",
+      guild: ""
+  });
+
+  await lobby.save();
+
+  const lobbyMessage = await getLobbyMessage(lobby, interaction.client);
+  await lobbyMessage.edit({
+      embeds: [graidCreateEmbed(lobby)],
+      components: [getButtonRow(lobby.lobbyId)]
+  });
+
+  await interaction.editReply({
+      content: 'Reserved a spot successfully!'
+  });
+
+  await checkForFullLobby(lobby, interaction);
 }

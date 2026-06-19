@@ -3,14 +3,15 @@ const path = require("path");
 const { ActionRowBuilder } = require("discord.js");
 
 module.exports = lobbyId => {
-    const buttonsPath = path.join(__dirname, "buttons");
+  const buttonsPath = path.join(__dirname, "buttons");
 
-    const buttons = fs.readdirSync(buttonsPath)
-        .map(file => {
-            const buttonCreator = require(path.join(buttonsPath, file));
-            return buttonCreator(lobbyId);
-        });
+  const buttons = fs.readdirSync(buttonsPath)
+    .sort((a, b) => a.localeCompare(b))
+    .map(file => {
+      const buttonCreator = require(path.join(buttonsPath, file));
+      return buttonCreator(lobbyId);
+    });
 
-    return new ActionRowBuilder()
-        .addComponents(buttons);
+  return new ActionRowBuilder()
+    .addComponents(buttons);
 };

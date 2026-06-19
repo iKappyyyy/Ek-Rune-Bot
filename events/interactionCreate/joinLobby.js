@@ -9,59 +9,57 @@ const getLobbyMessage = require('../../utils/getLobbyMessage');
 const getUserGuild = require('../../utils/getUserGuild');
 
 module.exports = async (interaction, client) => {
-    if (!interaction.isButton()) return;
+    if (!interaction.isButton() || !interaction.customId.startsWith('join-button-')) return;
 
-    if (interaction.customId.startsWith('join-button-')) {
-        const lobbyId = interaction.customId.replace('join-button-', '');
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-        
-        const lobby = await Lobby.findOne({ lobbyId });
-
-        if (!lobby) {  // lobby wasn't found
-            await interaction.editReply({
-                content: 'Sorry, the lobby couldn\'t be found. Please create a new lobby.'
-            });
-
-            return;
-        } else if (lobby.members.some(member => member.user === String(interaction.user))) { // user already in lobby
-            await interaction.editReply({
-                content: `Successfully left ${lobby.members[0].user}'s ${lobby.raidType} lobby.`
-            });
-
-            await removeUserFromLobby(lobby, interaction.user, client);
-        } else if (MaxLobbyMembers <= lobby.members.length) {  // lobby is full
-            await interaction.editReply({
-                content: `Couldn't join because ${lobby.members[0].user}'s ${lobby.raidType} lobby is already full!`
-            });
-
-            return;
-        } else { // user isn't in the lobby
-            const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
-
-            if (lobbyUserIsIn) {
-                await interaction.editReply({
-                    content: `Successfully swapped from ${lobbyUserIsIn.members[0].user}'s ${lobbyUserIsIn.raidType} lobby to ${lobby.members[0].user}'s ${lobby.raidType} lobby!`
-                });
-                
-                await removeUserFromLobby(lobbyUserIsIn, interaction.user, client);
-            } else {
-                await interaction.editReply({
-                    content: `You have joined ${lobby.members[0].user}'s ${lobby.raidType} lobby!`,
-                });
-            }
+    const lobbyId = interaction.customId.replace('join-button-', '');
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     
-            const userGuild = await getUserGuild(interaction.user)
-            lobby.members.push({ user: interaction.user, guild: userGuild});
-            await checkForFullLobby(lobby, interaction);
-        }
+    const lobby = await Lobby.findOne({ lobbyId });
 
-        if (lobby && lobby.members.some(member => member.user !== "Reserved")) {
-            await lobby.save();
+    if (!lobby) {  // lobby wasn't found
+        await interaction.editReply({
+            content: 'Sorry, the lobby couldn\'t be found. Please create a new lobby.'
+        });
 
-            const reply = await getLobbyMessage(lobby, client);
-            await reply.edit({
-                embeds: [graidCreateEmbed(lobby)]
+        return;
+    } else if (lobby.members.some(member => member.user === String(interaction.user))) { // user already in lobby
+        await interaction.editReply({
+            content: `Successfully left ${lobby.members[0].user}'s ${lobby.raidType} lobby.`
+        });
+
+        await removeUserFromLobby(lobby, interaction.user, client);
+    } else if (MaxLobbyMembers <= lobby.members.length) {  // lobby is full
+        await interaction.editReply({
+            content: `Couldn't join because ${lobby.members[0].user}'s ${lobby.raidType} lobby is already full!`
+        });
+
+        return;
+    } else { // user isn't in the lobby
+        const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
+
+        if (lobbyUserIsIn) {
+            await interaction.editReply({
+                content: `Successfully swapped from ${lobbyUserIsIn.members[0].user}'s ${lobbyUserIsIn.raidType} lobby to ${lobby.members[0].user}'s ${lobby.raidType} lobby!`
+            });
+            
+            await removeUserFromLobby(lobbyUserIsIn, interaction.user, client);
+        } else {
+            await interaction.editReply({
+                content: `You have joined ${lobby.members[0].user}'s ${lobby.raidType} lobby!`,
             });
         }
+
+        const userGuild = await getUserGuild(interaction.user)
+        lobby.members.push({ user: interaction.user, guild: userGuild});
+        await checkForFullLobby(lobby, interaction);
+    }
+
+    if (lobby && lobby.members.some(member => member.user !== "Reserved")) {
+        await lobby.save();
+
+        const reply = await getLobbyMessage(lobby, client);
+        await reply.edit({
+            embeds: [graidCreateEmbed(lobby)]
+        });
     }
 }
