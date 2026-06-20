@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { MaxLobbyMembers } = require('../enums');
 
 module.exports = {
-    graidCreateEmbed: (lobby) => {
+    graidCreateEmbed: (lobby, lobbyAuthor) => {
         if (!Array.isArray(lobby.members)) lobby.members=[];
         lobby.members = lobby.members.slice(0, MaxLobbyMembers);
 
@@ -20,9 +20,12 @@ module.exports = {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle(':rotating_light: Epic Graid Alert :rotating_light:')
-            .setDescription(`super epic graid lobby bot`)
+            .setTitle(`:dragon_face: ${lobbyAuthor.toUpperCase()} WANTS TO RAID! :dragon_face:`)
+            .setDescription('Join the lobby using the \'Join / Leave\' button below!\n\n')
             .setColor(lobby.messageColor)
+            .setThumbnail('https://github.com/iKappyyyy/Ek-Rune-Bot/blob/main/assets/ekRunePfp.png?raw=true')
+            .setFooter({ text: 'Re-register using the RaidKeeper bot to update your Guild!' })
+            .setTimestamp()
             .addFields({
                 name: 'Raid Type',
                 value: lobby.raidType,

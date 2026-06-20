@@ -57,9 +57,11 @@ module.exports = async (interaction, client) => {
     if (lobby && lobby.members.some(member => member.user !== "Reserved")) {
         await lobby.save();
 
+        const lobbyLeader = await interaction.client.users.fetch(lobby.members[0].user.replace(/[<@!>]/g, ""));
+
         const reply = await getLobbyMessage(lobby, client);
         await reply.edit({
-            embeds: [graidCreateEmbed(lobby)]
+            embeds: [graidCreateEmbed(lobby, lobbyLeader.displayName)]
         });
     }
 }

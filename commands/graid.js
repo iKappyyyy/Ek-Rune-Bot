@@ -51,7 +51,7 @@ module.exports = {
             const lobby = await createLobby(raidType, interaction.user, interaction.client);
 
             await interaction.reply({
-                embeds: [graidCreateEmbed(lobby)],
+                embeds: [graidCreateEmbed(lobby, interaction.user.displayName)],
                 components: [getButtonRow(lobby.lobbyId)],
             });
 
@@ -86,11 +86,11 @@ module.exports = {
                 } catch (error) {
                     console.log(`An error occurred while trying to delete a message. error: ${error}`);
                 }
-
-
+      
+                const lobbyLeader = await interaction.client.users.fetch(lobby.members[0].user.replace(/[<@!>]/g, ""));
 
                 await interaction.editReply({
-                    embeds: [graidCreateEmbed(lobbyUserIsIn)],
+                    embeds: [graidCreateEmbed(lobbyUserIsIn, lobbyLeader.displayName)],
                     components: [getButtonRow(lobbyUserIsIn.lobbyId)]
                 });
 

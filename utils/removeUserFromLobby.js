@@ -4,7 +4,13 @@ const { graidCreateEmbed } = require("./embedCreator");
 const getLobbyMessage = require("./getLobbyMessage");
 
 module.exports = async (lobby, user, client) => {
-    const newMembersList = lobby.members.filter(member => member.user !== String(user));
+    let newMembersList = [...lobby.members];
+    if (/^\d$/.test(String(user))) { // if the value is a digit
+        newMembersList = lobby.members.splice(user, 1);
+    } else {
+        newMembersList = lobby.members.filter(member => member.user !== String(user));
+    }
+    
     lobby.members = newMembersList;
 
     await lobby.save();
@@ -12,11 +18,16 @@ module.exports = async (lobby, user, client) => {
     try {
         const reply = await getLobbyMessage(lobby, client);
     
+        const lobbyIsEmpty = await checkForEmptyLobby(lobby, reply);
+
+        if (lobbyIsEmpty) return;
+
+        const lobbyLeader = await client.users.fetch(lobby.members[0].user.replace(/[<@!>]/g, ""));
+
         await reply.edit({
-            embeds: [graidCreateEmbed(lobby)]
+            embeds: [graidCreateEmbed(lobby, lobbyLeader.displayName)]
         });
 
-        await checkForEmptyLobby(lobby, reply);
     } catch (error) {
         console.log(`an error has occurred trying to edit the reply of a lobby | error: ${error}`);
     }

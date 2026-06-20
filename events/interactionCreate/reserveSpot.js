@@ -39,7 +39,7 @@ module.exports = async (interaction, client) => {
 
   const lobbyMessage = await getLobbyMessage(lobby, interaction.client);
   await lobbyMessage.edit({
-      embeds: [graidCreateEmbed(lobby)],
+      embeds: [graidCreateEmbed(lobby, interaction.user.displayName)],
       components: [getButtonRow(lobby.lobbyId)]
   });
 

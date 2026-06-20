@@ -3,10 +3,10 @@ const { StringSelectMenuOptionBuilder, StringSelectMenuBuilder } = require("disc
 
 module.exports = async (lobby, client) => {
   const options = await Promise.all(
-    lobby.members.slice(1).map(async (member, i) => { // slice to skip leader kicking itself
+    lobby.members.slice(1).map(async (member, i) => { // slice to skip leader kicking themselves
       if (member.user === "Reserved") {
         return new StringSelectMenuOptionBuilder()
-          .setLabel(`${i + 1}) Reserved`)
+          .setLabel(`${i + 2}) Reserved`)
           .setValue(String(i))
           .setEmoji('❌');
       }
@@ -14,7 +14,7 @@ module.exports = async (lobby, client) => {
       const user = await client.users.fetch(member.user.replace(/[<@!>]/g, ""));
 
       return new StringSelectMenuOptionBuilder()
-        .setLabel(`${i + 1}) ${user.displayName}`)
+        .setLabel(`${i + 2}) ${user.displayName}`)
         .setDescription(`@${user.username}`)
         .setValue(String(i))
         .setEmoji('❌');
