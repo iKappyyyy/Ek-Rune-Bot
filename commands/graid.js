@@ -28,7 +28,7 @@ module.exports = {
                             { name: "NOL", value: "NOL" },
                             { name: "TCC", value: "TCC" },
                             { name: "TNA", value: "TNA" },
-                            { name: "WTP", value: "WTP" }
+                            { name: "TWP", value: "TWP" }
                         )
                 )
         )

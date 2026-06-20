@@ -8,12 +8,21 @@ module.exports = async (interaction, client) => {
 
   const lobbyId = interaction.customId.replace('disband-button-', '');
   const lobby = await Lobby.findOne({ lobbyId });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  
+  if (!lobby) {  // lobby wasn't found
+    await interaction.editReply({
+      content: 'Sorry, the lobby couldn\'t be found. Please create a new lobby.'
+    });
+    
+    return;
+  }
+
   const reply = await getLobbyMessage(lobby, client);
   
   if (!userIsLobbyLeader(interaction.user, lobby)) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Only the leader can disband the lobby',
-      flags: MessageFlags.Ephemeral
     });
     return;
   }
@@ -30,8 +39,7 @@ module.exports = async (interaction, client) => {
     console.log(`there was an error deleting the lobby. error: ${error}`);
   }
 
-  await interaction.reply({
+  await interaction.editReply({
     content: 'Disbanded the lobby successfully!',
-    flags: MessageFlags.Ephemeral
   });
 }

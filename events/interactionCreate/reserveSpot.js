@@ -14,6 +14,14 @@ module.exports = async (interaction, client) => {
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+  if (!lobby) {  // lobby wasn't found
+    await interaction.editReply({
+      content: 'Sorry, the lobby couldn\'t be found. Please create a new lobby.'
+    });
+
+    return;
+  }
+
   if (!userIsLobbyLeader(interaction.user, lobby)) {
     await interaction.editReply({
       content: 'Only the leader can reserve spots!'
