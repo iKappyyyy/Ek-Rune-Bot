@@ -36,6 +36,7 @@ module.exports = async (interaction, client) => {
   }
 
   await interaction.editReply({
+    content: 'Select the member you would like to kick:',
     components: [
       new ActionRowBuilder()
         .addComponents(await getKickMemberMenu(lobby, client))

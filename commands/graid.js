@@ -5,9 +5,10 @@ const createLobby = require("../utils/createLobby");
 const getLobbyUserIsIn = require("../utils/getLobbyUserIsIn");
 const removeUserFromLobby = require("../utils/removeUserFromLobby");
 const getLobbyMessage = require("../utils/getLobbyMessage");
-const { MinGuildTagLength, MaxGuildTagLength } = require("../enums");
+const { MinGuildTagLength, MaxGuildTagLength, userVerificationResponseCodes } = require("../enums");
 const userIsLobbyLeader = require("../utils/userIsLobbyLeader");
 const checkForFullLobby = require("../utils/checkForFullLobby");
+const userIsVerified = require("../utils/userIsVerified");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -44,6 +45,28 @@ module.exports = {
         ),
 
     run: async ({ interaction }) => {
+        // check for user verification
+        switch (await userIsVerified(interaction.user)) {
+            case userVerificationResponseCodes.ERROR:
+                interaction.reply({
+                    content: 'An error has occurred fetching your guild. Please contact an admin.',
+                    flags: MessageFlags.Ephemeral
+                });
+                return;
+            case userVerificationResponseCodes.NOT_VERIFIED:
+                interaction.reply({
+                    content: 'You are not verified. Please verify using the RaidKeeper bot.',
+                    flags: MessageFlags.Ephemeral
+                });
+                return;
+            case userVerificationResponseCodes.NO_GUILD:
+                interaction.reply({
+                    content: 'You are not in a guild. Please join one and re-verify to use the bot.',
+                    flags: MessageFlags.Ephemeral
+                });
+                return;
+        }
+
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'create') {   // create a graid lobby
@@ -77,7 +100,7 @@ module.exports = {
             }
         } else if (subcommand === 'show') {
             const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
-            await interaction.deferReply();
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             if (lobbyUserIsIn) {
                 const lobbyMessage = await getLobbyMessage(lobbyUserIsIn, interaction.client);

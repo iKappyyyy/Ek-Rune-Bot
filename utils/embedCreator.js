@@ -24,7 +24,7 @@ module.exports = {
             .setDescription('Join the lobby using the \'Join / Leave\' button below!\n\n')
             .setColor(lobby.messageColor)
             .setThumbnail('https://github.com/iKappyyyy/Ek-Rune-Bot/blob/main/assets/ekRunePfp.png?raw=true')
-            .setFooter({ text: 'Re-register using the RaidKeeper bot to update your Guild!' })
+            .setFooter({ text: 'Re-verify using the RaidKeeper bot to update your Guild!' })
             .setTimestamp()
             .addFields({
                 name: 'Raid Type',
