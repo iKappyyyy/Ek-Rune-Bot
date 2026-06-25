@@ -5,19 +5,19 @@ const getLobbyMessage = require("./getLobbyMessage");
 
 module.exports = async (lobby, user, client) => {
     let newMembersList = [...lobby.members];
-    if (/^\d$/.test(String(user))) { // if the value is a digit
-        newMembersList = lobby.members.splice(user, 1);
+    if (Number.isInteger(Number(user))) { // if the value is a digit
+        newMembersList = lobby.members.filter((_, i) => i !== Number(user));
     } else {
         newMembersList = lobby.members.filter(member => member.user !== String(user));
     }
-    
+
     lobby.members = newMembersList;
 
     await lobby.save();
 
     try {
         const reply = await getLobbyMessage(lobby, client);
-    
+
         const lobbyIsEmpty = await checkForEmptyLobby(lobby, reply);
 
         if (lobbyIsEmpty) return;

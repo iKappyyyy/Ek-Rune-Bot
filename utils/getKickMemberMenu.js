@@ -7,7 +7,8 @@ module.exports = async (lobby, client) => {
       if (member.user === "Reserved") {
         return new StringSelectMenuOptionBuilder()
           .setLabel(`${i + 2}) Reserved`)
-          .setValue(String(i))
+          .setDescription(String(i + 1))
+          .setValue(String(i + 1))
           .setEmoji('❌');
       }
 
@@ -16,7 +17,7 @@ module.exports = async (lobby, client) => {
       return new StringSelectMenuOptionBuilder()
         .setLabel(`${i + 2}) ${user.displayName}`)
         .setDescription(`@${user.username}`)
-        .setValue(String(i))
+        .setValue(String(i + 1))
         .setEmoji('❌');
     })
   );

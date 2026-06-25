@@ -8,7 +8,7 @@ module.exports = async (lobby, interaction) => {
         membersString += `${i + 1}) ${lobby.members[i].user}\n`;
     }
 
-    await interaction.channel.send(`${lobby.members[0].user}'s ${lobby.raidType} lobby is ready!\n\n${membersString}`);
+    await interaction.channel.send(`${lobby.members[0].user}'s lobby is ready!\n\nMembers:\n${membersString}`);
     lobby.expiresAt = new Date(Date.now() + FullLobbyTTLMs);
     await lobby.save();
 

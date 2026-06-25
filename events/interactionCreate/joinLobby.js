@@ -24,13 +24,13 @@ module.exports = async (interaction, client) => {
         return;
     } else if (lobby.members.some(member => member.user === String(interaction.user))) { // user already in lobby
         await interaction.editReply({
-            content: `Successfully left ${lobby.members[0].user}'s ${lobby.raidType} lobby.`
+            content: `Successfully left ${lobby.members[0].user}'s lobby.`
         });
 
         await removeUserFromLobby(lobby, interaction.user, client);
     } else if (MaxLobbyMembers <= lobby.members.length) {  // lobby is full
         await interaction.editReply({
-            content: `Couldn't join because ${lobby.members[0].user}'s ${lobby.raidType} lobby is already full!`
+            content: `Couldn't join because ${lobby.members[0].user}'s lobby is already full!`
         });
 
         return;
@@ -39,13 +39,13 @@ module.exports = async (interaction, client) => {
 
         if (lobbyUserIsIn) {
             await interaction.editReply({
-                content: `Successfully swapped from ${lobbyUserIsIn.members[0].user}'s ${lobbyUserIsIn.raidType} lobby to ${lobby.members[0].user}'s ${lobby.raidType} lobby!`
+                content: `Successfully swapped from ${lobbyUserIsIn.members[0].user}'s lobby to ${lobby.members[0].user}'s lobby!`
             });
             
             await removeUserFromLobby(lobbyUserIsIn, interaction.user, client);
         } else {
             await interaction.editReply({
-                content: `You have joined ${lobby.members[0].user}'s ${lobby.raidType} lobby!`,
+                content: `You have joined ${lobby.members[0].user}'s lobby!`,
             });
         }
 

@@ -16,7 +16,10 @@ const lobbySchema = new mongoose.Schema({
         type: String,
         default: "0"
     },
-    raidType: String,
+    raidList: {
+        type: [String],
+        default: []
+    },
     members: [
         {
             user: String,

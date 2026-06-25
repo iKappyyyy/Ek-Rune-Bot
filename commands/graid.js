@@ -1,14 +1,17 @@
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags, LabelBuilder, ModalBuilder } = require("discord.js");
 const { graidCreateEmbed } = require('../utils/embedCreator');
 const getButtonRow = require("../utils/getButtonRow");
-const createLobby = require("../utils/createLobby");
+const createLobbyDocument = require("../utils/createLobbyDocument");
 const getLobbyUserIsIn = require("../utils/getLobbyUserIsIn");
 const removeUserFromLobby = require("../utils/removeUserFromLobby");
 const getLobbyMessage = require("../utils/getLobbyMessage");
-const { MinGuildTagLength, MaxGuildTagLength, userVerificationResponseCodes } = require("../enums");
+const { MinGuildTagLength, MaxGuildTagLength } = require("../enums");
 const userIsLobbyLeader = require("../utils/userIsLobbyLeader");
 const checkForFullLobby = require("../utils/checkForFullLobby");
-const userIsVerified = require("../utils/userIsVerified");
+const createRaidSelectionChoiceDropdown = require("../utils/createRaidSelectionChoiceDropdown");
+const { generateId } = require("../utils/createCustomId");
+const Lobby = require("../models/Lobby");
+const userCanUseBot = require("../utils/userCanUseBot");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,20 +21,6 @@ module.exports = {
             subcommand
                 .setName("create")
                 .setDescription("Creates a new guild raiding lobby!")
-                .addStringOption(option =>
-                    option
-                        .setName("raid-type")
-                        .setDescription("The lobby's raid type")
-                        .setRequired(true)
-                        .addChoices(
-                            { name: "Any", value: "Any" },
-                            { name: "NOTG", value: "NOTG" },
-                            { name: "NOL", value: "NOL" },
-                            { name: "TCC", value: "TCC" },
-                            { name: "TNA", value: "TNA" },
-                            { name: "TWP", value: "TWP" }
-                        )
-                )
         )
         .addSubcommand(subcommand =>
             subcommand
@@ -41,47 +30,33 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("show")
-                .setDescription('Resend your lobby\'s message!')    
+                .setDescription('Resend your lobby\'s message!')
         ),
 
     run: async ({ interaction }) => {
-        // check for user verification
-        switch (await userIsVerified(interaction.user)) {
-            case userVerificationResponseCodes.ERROR:
-                interaction.reply({
-                    content: 'An error has occurred fetching your guild. Please contact an admin.',
-                    flags: MessageFlags.Ephemeral
-                });
-                return;
-            case userVerificationResponseCodes.NOT_VERIFIED:
-                interaction.reply({
-                    content: 'You are not verified. Please verify using the RaidKeeper bot.',
-                    flags: MessageFlags.Ephemeral
-                });
-                return;
-            case userVerificationResponseCodes.NO_GUILD:
-                interaction.reply({
-                    content: 'You are not in a guild. Please join one and re-verify to use the bot.',
-                    flags: MessageFlags.Ephemeral
-                });
-                return;
-        }
+        if (!(await userCanUseBot(interaction))) return;
 
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'create') {   // create a graid lobby
-            const raidType = interaction.options.get('raid-type').value;
-            const lobby = await createLobby(raidType, interaction.user, interaction.client);
+            let lobbyId = generateId();
+            while (await Lobby.exists({ lobbyId })) {
+                lobbyId = generateId();
+            }
 
-            await interaction.reply({
-                embeds: [graidCreateEmbed(lobby, interaction.user.displayName)],
-                components: [getButtonRow(lobby.lobbyId)],
-            });
+            const raidSelectionModal = new ModalBuilder()
+                .setCustomId(`select-raids-modal-${lobbyId}`)
+                .setTitle('Raid Selection');
+            const raidSelectionDropdown = createRaidSelectionChoiceDropdown(lobbyId);
+            const raidSelectionDropdownLabel = new LabelBuilder()
+                .setLabel('Which raids would you be open to playing?')
+                .setStringSelectMenuComponent(raidSelectionDropdown);
+            raidSelectionModal.addLabelComponents(raidSelectionDropdownLabel);
 
-            const message = await interaction.fetchReply();
+            await interaction.showModal(raidSelectionModal);
 
-            lobby.channelId = message.channel.id;
-            lobby.messageId = message.id;
+            const lobby = await createLobbyDocument(lobbyId, interaction.user, interaction.client);
+
             await lobby.save();
         } else if (subcommand === 'leave') {
             const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
@@ -89,9 +64,9 @@ module.exports = {
 
             if (lobbyUserIsIn) {
                 await interaction.editReply({
-                    content: `Successfully left ${lobbyUserIsIn.members[0].user}'s ${lobbyUserIsIn.raidType} lobby.`
+                    content: `Successfully left ${lobbyUserIsIn.members[0].user}'s lobby.`
                 });
-                
+
                 await removeUserFromLobby(lobbyUserIsIn, interaction.user, interaction.client);
             } else {
                 await interaction.editReply({
@@ -100,7 +75,7 @@ module.exports = {
             }
         } else if (subcommand === 'show') {
             const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
-            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+            await interaction.deferReply();
 
             if (lobbyUserIsIn) {
                 const lobbyMessage = await getLobbyMessage(lobbyUserIsIn, interaction.client);
@@ -109,8 +84,8 @@ module.exports = {
                 } catch (error) {
                     console.log(`An error occurred while trying to delete a message. error: ${error}`);
                 }
-      
-                const lobbyLeader = await interaction.client.users.fetch(lobby.members[0].user.replace(/[<@!>]/g, ""));
+
+                const lobbyLeader = await interaction.client.users.fetch(lobbyUserIsIn.members[0].user.replace(/[<@!>]/g, ""));
 
                 await interaction.editReply({
                     embeds: [graidCreateEmbed(lobbyUserIsIn, lobbyLeader.displayName)],
@@ -133,5 +108,6 @@ module.exports = {
     },
 
     deleted: true
-    
+
 }
+

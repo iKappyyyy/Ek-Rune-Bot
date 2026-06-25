@@ -3,7 +3,7 @@ const { MaxLobbyMembers } = require('../enums');
 
 module.exports = {
     graidCreateEmbed: (lobby, lobbyAuthor) => {
-        if (!Array.isArray(lobby.members)) lobby.members=[];
+        if (!Array.isArray(lobby.members)) lobby.members = [];
         lobby.members = lobby.members.slice(0, MaxLobbyMembers);
 
         const vacancyNumberString = `${lobby.members.length}/${MaxLobbyMembers}`;
@@ -27,8 +27,8 @@ module.exports = {
             .setFooter({ text: 'Re-verify using the RaidKeeper bot to update your Guild!' })
             .setTimestamp()
             .addFields({
-                name: 'Raid Type',
-                value: lobby.raidType,
+                name: 'Raids',
+                value: lobby.raidList.join(', '),
                 inline: true
             }, {
                 name: 'Members',

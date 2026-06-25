@@ -23,7 +23,7 @@ module.exports = async (interaction, client) => {
 
   if (lobby.members.length <= 1) {
     await interaction.editReply({
-      content: 'You are the only person in the lobby! sad'
+      content: 'You are the only person in the lobby! who are you trying to kick??'
     });
     return;
   }

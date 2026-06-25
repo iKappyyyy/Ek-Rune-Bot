@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { userVerificationResponseCodes } = require('../enums');
+const { UserVerificationResponseCodes } = require('../enums');
 const UserGuild = require('../models/UserGuild');
 
 module.exports = async user => {
@@ -18,11 +18,11 @@ module.exports = async user => {
     ).then(data => data.json());
 
     if (response.error === "User not verified") {
-        return userVerificationResponseCodes.NOT_VERIFIED;
+        return UserVerificationResponseCodes.NOT_VERIFIED;
     }
 
     if (!response.wynncraft_guild_tag) {
-        return userVerificationResponseCodes.NO_GUILD;
+        return UserVerificationResponseCodes.NO_GUILD;
     }
 
     const userGuild = new UserGuild({
@@ -32,10 +32,10 @@ module.exports = async user => {
 
     await userGuild.save();
 
-    return userVerificationResponseCodes.VERIFIED;
+    return UserVerificationResponseCodes.VERIFIED;
 
   } catch (error) {
     console.log(`Error fetching guild: ${error}`);
-    return userVerificationResponseCodes.ERROR;
+    return UserVerificationResponseCodes.ERROR;
   }
 }
