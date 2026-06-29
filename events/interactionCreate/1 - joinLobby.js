@@ -7,6 +7,8 @@ const removeUserFromLobby = require('../../utils/removeUserFromLobby');
 const checkForFullLobby = require('../../utils/checkForFullLobby');
 const getLobbyMessage = require('../../utils/getLobbyMessage');
 const getUserGuild = require('../../utils/getUserGuild');
+const getUserBlacklist = require('../../utils/getUserBlacklist');
+const userIsInLobbyBlacklist = require('../../utils/userIsInLobbyBlacklist');
 
 module.exports = async (interaction, client) => {
     if (!interaction.isButton() || !interaction.customId.startsWith('join-button-')) return;
@@ -35,6 +37,14 @@ module.exports = async (interaction, client) => {
 
         return;
     } else { // user isn't in the lobby
+        if (userIsInLobbyBlacklist(lobby, interaction.user.id)) {
+            await interaction.editReply({
+                content: 'You cannot join this lobby because one of the members has you blacklisted!'
+            });
+
+            return;
+        }
+
         const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
 
         if (lobbyUserIsIn) {
@@ -49,8 +59,10 @@ module.exports = async (interaction, client) => {
             });
         }
 
-        const userGuild = await getUserGuild(interaction.user)
+        const userGuild = await getUserGuild(interaction.user);
+        const blacklist = await getUserBlacklist(interaction.user.id);
         lobby.members.push({ user: interaction.user, guild: userGuild});
+        lobby.blacklist[interaction.user.id] = blacklist;
         await checkForFullLobby(lobby, interaction);
     }
 

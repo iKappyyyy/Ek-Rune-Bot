@@ -1,6 +1,6 @@
 const Lobby = require("../models/Lobby");
 
-module.exports = async (lobby, reply) => {
+module.exports = async (lobby, message, readyMessage) => {
     
     if (!lobby.members) {
         return false;
@@ -11,15 +11,17 @@ module.exports = async (lobby, reply) => {
     }
 
     try {
-        await reply.delete();
+        await message.delete();
+
+        if (readyMessage) {
+            await readyMessage.delete();
+        }
     } catch (error) {
-        console.log(`there was an error deleting the reply. error: ${error}`);
+        console.log(`there was an error deleting the message. error: ${error}`);
     }
 
     try {
-        await Lobby.deleteOne({
-            lobbyId: lobby.lobbyId
-        });
+        await lobby.deleteOne();
     } catch (error) {
         console.log(`there was an error deleting the lobby. error: ${error}`);
     }

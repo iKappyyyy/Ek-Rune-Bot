@@ -8,6 +8,10 @@ const lobbySchema = new mongoose.Schema({
         type: String,
         default: "0"
     },
+    readyMessageId: {
+        type: String,
+        default: ""
+    },
     messageColor: {
         type: Number,
         default: getRandomColor
@@ -26,11 +30,14 @@ const lobbySchema = new mongoose.Schema({
             guild: String
         }
     ],
-
+    blacklist: {
+        type: Map,
+        of: [String],
+        default: {}
+    },
     expiresAt: {
         type: Date,
-        default: new Date(Date.now() + LobbyTTLMs),
-        index: { expires: 0 }
+        default: () => new Date(Date.now() + LobbyTTLMs),
     }
 });
 

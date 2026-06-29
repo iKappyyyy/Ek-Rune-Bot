@@ -7,7 +7,6 @@ module.exports = async (lobby, client) => {
       if (member.user === "Reserved") {
         return new StringSelectMenuOptionBuilder()
           .setLabel(`${i + 2}) Reserved`)
-          .setDescription(String(i + 1))
           .setValue(String(i + 1))
           .setEmoji('❌');
       }
@@ -23,7 +22,9 @@ module.exports = async (lobby, client) => {
   );
 
   return new StringSelectMenuBuilder()
-    .setCustomId(`kick-members-${lobby.lobbyId}`)
+    .setCustomId(`kick-members-dropdown-${lobby.lobbyId}`)
     .setPlaceholder('Select which member to kick')
-    .addOptions(options);
+    .addOptions(options)
+    .setMinValues(1)
+    .setMaxValues(1);
 }

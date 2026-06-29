@@ -3,6 +3,9 @@ const { Client, IntentsBitField } = require('discord.js');
 const mongoose = require('mongoose');
 const { CommandHandler } = require('djs-commander');
 const path = require('path');
+const userCanUseBot = require('./utils/userCanUseBot');
+const deleteEmptyLobbies = require('./utils/deleteEmptyLobbies');
+const { EmptyLobbyCheckTimeMs } = require('./enums');
 
 const client = new Client({
   intents: [
@@ -20,8 +23,13 @@ const client = new Client({
     new CommandHandler({
       client,
       commandsPath: path.join(__dirname, "commands"),
-      eventsPath: path.join(__dirname, "events")
+      eventsPath: path.join(__dirname, "events"),
+      validationsPath: path.join(__dirname, "validations")
     });
+
+    setInterval(async () => {
+      await deleteEmptyLobbies(client);
+    }, EmptyLobbyCheckTimeMs);
 
     client.login(process.env.TOKEN);
   } catch (error) {

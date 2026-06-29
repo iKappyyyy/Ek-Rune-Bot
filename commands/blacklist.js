@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const { MinDiscordIDLength, MaxDiscordIDLength } = require("../enums");
 const BlockUser = require("../models/BlockUser");
-const userCanUseBot = require("../utils/userCanUseBot");
+const getLobbyUserIsIn = require("../utils/getLobbyUserIsIn");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -36,13 +35,20 @@ module.exports = {
         ),
 
     run: async ({ interaction }) => {
-        if (!(await userCanUseBot(interaction))) return;
-
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'add') {
             const blacklistUserID = interaction.options.get('user').value.replace(/[<>@]/g, "");
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+            if (String(blacklistUserID) === String(interaction.user.id)) {
+                await interaction.editReply({
+                    content: 'You cannot blacklist yourself silly'
+                });
+
+                return;
+            }
+
             const blacklistUser = await interaction.client.users.fetch(blacklistUserID).catch(() => null);
             if (!blacklistUser) {
                 await interaction.editReply({
@@ -66,6 +72,13 @@ module.exports = {
             });
 
             await blacklistUserDoc.save();
+            
+            const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
+            if (lobbyUserIsIn) {
+                lobbyUserIsIn.blacklist.get(String(interaction.user.id)).push(blacklistUser.id);
+
+                await lobbyUserIsIn.save();
+            }
 
             await interaction.editReply({
                 content: `Successfully blacklisted ${blacklistUser}!`
@@ -95,6 +108,16 @@ module.exports = {
                 return;
             }
 
+            const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
+            if (lobbyUserIsIn) {
+                console.log(lobbyUserIsIn.blacklist);
+                console.log(String(interaction.user.id))
+                console.log(lobbyUserIsIn.blacklist.get(String(interaction.user.id)));
+                const newBlacklist = lobbyUserIsIn.blacklist.get(String(interaction.user.id)).filter(blockedUser => blockedUser !== blacklistUserID);
+                lobbyUserIsIn.blacklist.set(String(interaction.user.id), newBlacklist);
+                await lobbyUserIsIn.save();
+            }
+
             await interaction.editReply({
                 content: `Successfully removed ${blacklistUser} from your blacklist!`
             });
@@ -105,7 +128,7 @@ module.exports = {
 
             if (blacklistRelationships.length <= 0) {
                 await interaction.reply({
-                    content: 'You have no enemies.\nhttps://tenor.com/view/dog-nose-butterfly-dog-puppy-peaceful-gif-14700589898488542320',
+                    content: 'Your blacklist is empty!',
                     flags: MessageFlags.Ephemeral
                 });
 

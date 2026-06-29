@@ -11,7 +11,7 @@ const checkForFullLobby = require("../utils/checkForFullLobby");
 const createRaidSelectionChoiceDropdown = require("../utils/createRaidSelectionChoiceDropdown");
 const { generateId } = require("../utils/createCustomId");
 const Lobby = require("../models/Lobby");
-const userCanUseBot = require("../utils/userCanUseBot");
+const getReadyMessage = require("../utils/getReadyMessage");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -34,8 +34,6 @@ module.exports = {
         ),
 
     run: async ({ interaction }) => {
-        if (!(await userCanUseBot(interaction))) return;
-
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'create') {   // create a graid lobby
@@ -52,8 +50,11 @@ module.exports = {
                 .setLabel('Which raids would you be open to playing?')
                 .setStringSelectMenuComponent(raidSelectionDropdown);
             raidSelectionModal.addLabelComponents(raidSelectionDropdownLabel);
-
-            await interaction.showModal(raidSelectionModal);
+            try {
+                await interaction.showModal(raidSelectionModal);
+            } catch (error) {
+                console.log('failed to show modal', error)
+            }
 
             const lobby = await createLobbyDocument(lobbyId, interaction.user, interaction.client);
 
@@ -75,35 +76,39 @@ module.exports = {
             }
         } else if (subcommand === 'show') {
             const lobbyUserIsIn = await getLobbyUserIsIn(interaction.user);
-            await interaction.deferReply();
 
-            if (lobbyUserIsIn) {
-                const lobbyMessage = await getLobbyMessage(lobbyUserIsIn, interaction.client);
-                try {
-                    lobbyMessage.delete();
-                } catch (error) {
-                    console.log(`An error occurred while trying to delete a message. error: ${error}`);
-                }
-
-                const lobbyLeader = await interaction.client.users.fetch(lobbyUserIsIn.members[0].user.replace(/[<@!>]/g, ""));
-
-                await interaction.editReply({
-                    embeds: [graidCreateEmbed(lobbyUserIsIn, lobbyLeader.displayName)],
-                    components: [getButtonRow(lobbyUserIsIn.lobbyId)]
-                });
-
-
-                const message = await interaction.fetchReply();
-                lobbyUserIsIn.channelId = message.channel.id;
-                lobbyUserIsIn.messageId = message.id;
-                await lobbyUserIsIn.save();
-
-            } else {
-                await interaction.editReply({
+            if (!lobbyUserIsIn) {
+                await interaction.reply({
                     content: 'You are not in any existing lobby!',
                     flags: MessageFlags.Ephemeral
                 });
+
+                return;
             }
+
+            const lobbyMessage = await getLobbyMessage(lobbyUserIsIn, interaction.client);
+            const readyMessage = await getReadyMessage(lobbyUserIsIn, interaction.client);
+            try {
+                await lobbyMessage.delete();
+
+                if (readyMessage !== "") await readyMessage.delete();
+            } catch (error) {
+                console.log(`An error occurred while trying to delete a message. error: ${error}`);
+            }
+
+            const lobbyLeader = await interaction.client.users.fetch(lobbyUserIsIn.members[0].user.replace(/[<@!>]/g, ""));
+
+            await interaction.reply({
+                embeds: [graidCreateEmbed(lobbyUserIsIn, lobbyLeader.displayName)],
+                components: [getButtonRow(lobbyUserIsIn.lobbyId)]
+            });
+
+
+            const message = await interaction.fetchReply();
+            lobbyUserIsIn.channelId = message.channel.id;
+            lobbyUserIsIn.messageId = message.id;
+            lobbyUserIsIn.readyMessageId = "";
+            await lobbyUserIsIn.save();
         }
     },
 
